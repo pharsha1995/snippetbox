@@ -3,14 +3,22 @@ package main
 import (
 	"html/template"
 	"path/filepath"
+	"time"
 
 	"github.com/pharsha1995/snippetbox/internal/models"
 )
 
 type templateData struct {
+	CurrentYear int
 	Snippet models.Snippet
 	Snippets []models.Snippet
 }
+
+func humanDate(t time.Time) string {
+	return t.Format("02 Jan 2006 at 15:04")
+}
+
+var funcMap = template.FuncMap{"humanDate": humanDate}
 
 func newTemplateCache() (map[string]*template.Template, error) {
 	cache := map[string]*template.Template{}
@@ -31,7 +39,7 @@ func newTemplateCache() (map[string]*template.Template, error) {
 		files := []string{"./ui/html/base.tmpl.html", page}
 		files = append(files, partials...)
 
-		ts, err := template.ParseFiles(files...)
+		ts, err := template.New(name).Funcs(funcMap).ParseFiles(files...)
 		if err != nil {
 			return nil, err
 		}
