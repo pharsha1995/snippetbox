@@ -16,7 +16,7 @@ func (app *application) clientError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
 } 
 
-func (app *application) render(w http.ResponseWriter, r *http.Request, status int, page string, data templateData) {
+func (app *application) render(w http.ResponseWriter, r *http.Request, status int, page string, data *templateData) {
 	ts, ok := app.templateCache[page]
 	if !ok {
 		err := fmt.Errorf("template %s does not exist", page)
@@ -35,6 +35,6 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 	buf.WriteTo(w)
 }
 
-func (app *application) newTemplateData(r *http.Request) templateData {
-	return templateData{CurrentYear: time.Now().Year()}
+func (app *application) newTemplateData(r *http.Request) *templateData {
+	return &templateData{CurrentYear: time.Now().Year()}
 }
