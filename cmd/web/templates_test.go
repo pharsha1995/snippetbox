@@ -8,7 +8,7 @@ import (
 )
 
 func TestHumanDate(t *testing.T) {
-	tests := []struct{
+	tests := []struct {
 		name string
 		tm   time.Time
 		want string
@@ -25,7 +25,7 @@ func TestHumanDate(t *testing.T) {
 		},
 		{
 			name: "IST",
-			tm:   time.Date(2024, 6, 2, 17, 47, 0, 0, time.FixedZone("IST", 11 * 30 * 60)),
+			tm:   time.Date(2024, 6, 2, 17, 47, 0, 0, time.FixedZone("IST", 11*30*60)),
 			want: "02 Jun 2024 at 12:17",
 		},
 	}

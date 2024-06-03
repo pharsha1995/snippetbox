@@ -48,13 +48,13 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 }
 
 type snippetCreateForm struct {
-	Title               string `form:"title"` 
+	Title               string `form:"title"`
 	Content             string `form:"content"`
 	Expires             int    `form:"expires"`
-	validator.Validator        `form:"-"`
+	validator.Validator `form:"-"`
 }
 
-func (app * application) snippetCreate(w http.ResponseWriter, r *http.Request) {
+func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = &snippetCreateForm{Expires: 365}
 
@@ -132,7 +132,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateEmail) {
 			form.AddFieldError("email", "Email address is already in use")
-			
+
 			data := app.newTemplateData(r)
 			data.Form = form
 			app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl.html", data)
@@ -151,7 +151,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 type userLoginForm struct {
 	Email               string `form:"email"`
 	Password            string `form:"password"`
-	validator.Validator        `form:"-"`
+	validator.Validator `form:"-"`
 }
 
 func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {

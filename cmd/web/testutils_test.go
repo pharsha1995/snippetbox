@@ -9,7 +9,6 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"regexp"
 	"testing"
 	"time"
@@ -33,7 +32,7 @@ func newTestApplication(t *testing.T) *application {
 	sessionManager.Cookie.Secure = true
 
 	return &application{
-		logger:         slog.New(slog.NewTextHandler(os.Stdout, nil)),
+		logger:         slog.New(slog.NewTextHandler(io.Discard, nil)),
 		snippets:       &mocks.SnippetModel{},
 		users:          &mocks.UserModel{},
 		templateCache:  templateCache,
@@ -89,7 +88,7 @@ func extractCSRFToken(t *testing.T, body string) string {
 }
 
 func (ts *testServer) postForm(t *testing.T, urlPath string, form url.Values) (int, http.Header, string) {
-	res, err := ts.Client().PostForm(ts.URL + urlPath, form)
+	res, err := ts.Client().PostForm(ts.URL+urlPath, form)
 	if err != nil {
 		t.Fatal(err)
 	}
