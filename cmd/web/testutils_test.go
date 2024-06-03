@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -27,11 +28,12 @@ func newTestApplication(t *testing.T) *application {
 	sessionManager.Cookie.Secure = true
 
 	return &application{
-		logger:        slog.New(slog.NewTextHandler(io.Discard, nil)),
-		snippets:      &mocks.SnippetModel{},
-		users:         &mocks.UserModel{},
-		templateCache: templateCache,
-		formDecoder:   formDecoder,
+		logger:         slog.New(slog.NewTextHandler(os.Stdout, nil)),
+		snippets:       &mocks.SnippetModel{},
+		users:          &mocks.UserModel{},
+		templateCache:  templateCache,
+		formDecoder:    formDecoder,
+		sessionManager: sessionManager,
 	}
 }
 
