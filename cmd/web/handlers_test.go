@@ -190,3 +190,38 @@ func TestUserSignup(t *testing.T) {
 		})
 	}
 }
+
+func TestSnippetCreate(t *testing.T) {
+	app := newTestApplication(t)
+	server := newTestServer(t, app.routes())
+	defer server.Close()
+
+	t.Run("Unauthenticated", func(t *testing.T) {
+		code, header, _ := server.get(t, "/snippet/create")
+
+		assert.Equal(t, code, http.StatusSeeOther)
+		assert.Equal(t, header.Get("Location"), "/user/login")
+	})
+
+	t.Run("Authenticated", func(t *testing.T) {
+		const (
+			email = "alice@example.com"
+			password = "password"
+			formTag = `form action="/snippet/create" method="POST">`
+		)
+		_, _, body := server.get(t, "/user/login")
+		csrfToken := extractCSRFToken(t, body)
+
+		form := url.Values{}
+		form.Add("email", email)
+		form.Add("password", password)
+		form.Add("csrf_token", csrfToken)
+
+		server.postForm(t, "/user/login", form)
+
+		code, _, body := server.get(t, "/snippet/create")
+
+		assert.Equal(t, code, http.StatusOK)
+		assert.StringContains(t, body, formTag)
+	})
+}
