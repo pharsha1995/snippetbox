@@ -70,9 +70,9 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
+	form.CheckField(validator.NotBlank(form.Title), "title", validator.NOT_BLANK)
 	form.CheckField(validator.MaxChars(form.Title, 100), "title", "This field cannot be more than 100 characters long")
-	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
+	form.CheckField(validator.NotBlank(form.Content), "content", validator.NOT_BLANK)
 	form.CheckField(validator.PermittedValue(form.Expires, 1, 7, 365), "expires", "This field must equal 1, 7 or 365")
 
 	if !form.Valid() {
@@ -115,10 +115,10 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	form.CheckField(validator.NotBlank(form.Name), "name", "This field cannot be blank")
-	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
+	form.CheckField(validator.NotBlank(form.Name), "name", validator.NOT_BLANK)
+	form.CheckField(validator.NotBlank(form.Email), "email", validator.NOT_BLANK)
 	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
-	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
+	form.CheckField(validator.NotBlank(form.Password), "password", validator.NOT_BLANK)
 	form.CheckField(validator.MinChars(form.Password, 8), "password", "This field must be at least 8 characters long")
 
 	if !form.Valid() {
@@ -169,9 +169,9 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
+	form.CheckField(validator.NotBlank(form.Email), "email", validator.NOT_BLANK)
 	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
-	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
+	form.CheckField(validator.NotBlank(form.Password), "password", validator.NOT_BLANK)
 
 	if !form.Valid() {
 		data := app.newTemplateData(r)
@@ -252,4 +252,57 @@ func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
 	data.User = user
 
 	app.render(w, r, http.StatusOK, "account.tmpl.html", data)
+}
+
+type accountPasswordUpdateForm struct {
+	CurPassword         string `form:"curPassword"`
+	NewPassword         string `form:"newPassword"`
+	NewPasswordConfirm  string `form:"newPasswordConfirm"`
+	validator.Validator        `form:"-"`
+}
+
+func (app *application) accountPasswordUpdate(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	data.Form = &accountPasswordUpdateForm{}
+	app.render(w, r, http.StatusOK, "password.tmpl.html", data)
+}
+
+func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http.Request) {
+	form := &accountPasswordUpdateForm{}
+
+	err := app.decodePostForm(r, form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form.CheckField(validator.NotBlank(form.CurPassword), "curPassword", validator.NOT_BLANK)
+	form.CheckField(validator.NotBlank(form.NewPassword), "newPassword", validator.NOT_BLANK)
+	form.CheckField(validator.MinChars(form.NewPassword, 8), "newPassword", validator.MIN_LEN_PASSWORD)
+	form.CheckField(validator.NotBlank(form.NewPasswordConfirm), "newPasswordConfirm", validator.NOT_BLANK)
+	form.CheckField(validator.Equal(form.NewPassword, form.NewPasswordConfirm), "newPasswordConfirm", "Passwords do not match")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, r, http.StatusUnprocessableEntity, "password.tmpl.html", data)
+		return
+	}
+
+	id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	err = app.users.PasswordUpdate(id, form.CurPassword, form.NewPassword)
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidCredentials) {
+			form.AddFieldError("curPassword", "Wrong password")
+			data := app.newTemplateData(r)
+			data.Form = form
+			app.render(w, r, http.StatusUnprocessableEntity, "password.tmpl.html", data)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+
+	app.sessionManager.Put(r.Context(), "flash", "Password changed successfully")
+	http.Redirect(w, r, "/account/view", http.StatusSeeOther)
 }

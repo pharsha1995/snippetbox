@@ -8,6 +8,8 @@ import (
 )
 
 var EmailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+const NOT_BLANK = "This field cannot be blank"
+const MIN_LEN_PASSWORD = "This field must be at least 8 characters long"
 
 type Validator struct {
 	NonFieldErrors []string
@@ -56,4 +58,8 @@ func MinChars(s string, n int) bool {
 
 func Matches(s string, rx *regexp.Regexp) bool {
 	return rx.MatchString(s)
+}
+
+func Equal[T comparable](v1, v2 T) bool {
+	return v1 == v2
 }
